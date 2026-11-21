@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>오늘의 출석 | 출석 관리</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20243a;
+      --muted: #81869a;
+      --line: #eceef4;
+      --paper: #fff;
+      --canvas: #f6f7fb;
+      --purple: #6c63e8;
+      --purple-dark: #554bd1;
+      --green: #21946b;
+      --green-bg: #e7f6ef;
+      --amber: #c98720;
+      --amber-bg: #fff3dc;
+      --blue: #477bd1;
+      --blue-bg: #eaf1ff;
+      --red: #d65b69;
+      --red-bg: #fff0f1;
+      --gray: #73798c;
+      --gray-bg: #f0f1f5;
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--canvas); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { max-width: 1200px; margin: 0 auto; padding: 38px 34px 56px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; color: white; background: var(--purple); box-shadow: 0 7px 16px #6c63e833; }
+    .brand-mark svg { width: 23px; height: 23px; }
+    h1 { font-size: 21px; letter-spacing: -.5px; margin: 0; }
+    .brand p { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+    .header-date { color: var(--muted); font-size: 13px; }
+    .heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 20px; }
+    .heading h2 { font-size: 27px; letter-spacing: -1px; margin: 0 0 5px; }
+    .heading p { color: var(--muted); margin: 0; font-size: 14px; }
+    .date-control { display: flex; align-items: center; gap: 9px; }
+    .date-control input { height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--ink); }
+    .btn { border: 0; border-radius: 10px; padding: 11px 15px; font-size: 13px; font-weight: 650; transition: .15s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--purple); color: white; box-shadow: 0 4px 10px #6c63e829; }
+    .btn-primary:hover { background: var(--purple-dark); }
+    .btn-light { border: 1px solid var(--line); background: white; color: #555b70; }
+    .btn-light:hover { background: #fafaff; border-color: #d9d7f8; }
+    .calendar { margin-bottom: 20px; padding: 20px; }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+    .calendar-header h3 { margin: 0; font-size: 17px; letter-spacing: -.3px; }
+    .calendar-nav { display: flex; gap: 7px; }
+    .calendar-nav button { width: 36px; height: 36px; padding: 0; font-size: 19px; line-height: 1; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+    .weekday { padding: 7px 0 10px; text-align: center; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .weekday:first-child { color: var(--red); }
+    .weekday:nth-child(7) { color: var(--blue); }
+    .calendar-day { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-height: 72px; padding: 10px; border: 1px solid transparent; border-radius: 10px; background: #f9f9fc; color: var(--ink); text-align: left; font-size: 13px; font-weight: 650; }
+    .calendar-day:hover { background: #f0efff; }
+    .calendar-day:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+    .calendar-day.selected { border-color: var(--purple); background: #f0efff; color: var(--purple-dark); }
+    .calendar-day.today .day-number::after { content: "오늘"; display: inline-block; margin-left: 5px; color: var(--purple); font-size: 10px; font-weight: 600; }
+    .day-record { color: var(--muted); font-size: 11px; font-weight: 500; }
+    .calendar-blank { min-height: 72px; }
+    .calendar-help { margin: 12px 0 0; color: var(--muted); font-size: 12px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat { display: flex; align-items: center; gap: 13px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 17px 18px; min-height: 88px; }
+    .stat-icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 17px; font-weight: 750; }
+    .stat-icon.all { background: #f0efff; color: var(--purple); }
+    .stat-icon.present { background: var(--green-bg); color: var(--green); }
+    .stat-icon.late { background: var(--amber-bg); color: var(--amber); }
+    .stat-icon.other { background: var(--gray-bg); color: var(--gray); }
+    .stat-label { color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+    .stat-value { font-size: 21px; font-weight: 750; letter-spacing: -.5px; }
+    .stat-value small { color: var(--muted); font-size: 12px; font-weight: 500; margin-left: 2px; }
+    .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+    .panel-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .panel-title { display: flex; align-items: center; gap: 9px; }
+    .panel-title h3 { margin: 0; font-size: 16px; }
+    .count-pill { color: var(--purple); background: #f0efff; border-radius: 20px; padding: 4px 8px; font-size: 11px; font-weight: 700; }
+    .panel-actions { display: flex; align-items: center; gap: 9px; }
+    .search { position: relative; }
+    .search span { position: absolute; top: 50%; left: 11px; transform: translateY(-50%); color: #9da2b2; font-size: 15px; }
+    .search input { width: 184px; height: 37px; border: 1px solid var(--line); border-radius: 9px; padding: 0 10px 0 32px; outline: none; }
+    .search input:focus, .date-control input:focus, .add-input:focus { border-color: #aaa5f1; box-shadow: 0 0 0 3px #6c63e81a; outline: none; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 620px; text-align: left; }
+    th { height: 43px; padding: 0 20px; color: #9095a6; font-size: 11px; font-weight: 650; background: #fcfcfe; }
+    td { padding: 13px 20px; border-top: 1px solid #f0f1f5; font-size: 13px; }
+    tbody tr:hover { background: #fdfdff; }
+    .student { display: flex; align-items: center; gap: 11px; font-weight: 650; }
+    .avatar { width: 32px; height: 32px; display: grid; place-items: center; color: #625bd5; background: #f0efff; border-radius: 10px; font-size: 12px; font-weight: 750; }
+    .number { width: 34px; color: #9a9eae; font-size: 12px; }
+    .status-select { min-width: 104px; border: 1px solid transparent; border-radius: 8px; padding: 7px 25px 7px 10px; font-size: 12px; font-weight: 650; cursor: pointer; }
+    .status-select:focus { outline: 2px solid #6c63e866; }
+    .status-present { background: var(--green-bg); color: var(--green); }
+    .status-late { background: var(--amber-bg); color: var(--amber); }
+    .status-early { background: var(--blue-bg); color: var(--blue); }
+    .status-absent { background: var(--red-bg); color: var(--red); }
+    .status-unmarked { background: var(--gray-bg); color: var(--gray); }
+    .memo { max-width: 220px; width: 100%; border: 1px solid transparent; background: transparent; padding: 8px; border-radius: 7px; color: #656b7e; }
+    .memo:hover, .memo:focus { border-color: var(--line); background: white; outline: none; }
+    .remove-btn { border: 0; color: #a4a8b5; background: transparent; font-size: 18px; padding: 4px 7px; border-radius: 7px; }
+    .remove-btn:hover { color: var(--red); background: var(--red-bg); }
+    .empty { padding: 52px 20px; text-align: center; }
+    .empty-icon { width: 52px; height: 52px; margin: 0 auto 13px; border-radius: 16px; display: grid; place-items: center; color: var(--purple); background: #f0efff; font-size: 22px; }
+    .empty h4 { margin: 0 0 7px; font-size: 15px; }
+    .empty p { margin: 0; color: var(--muted); font-size: 13px; }
+    .add-area { margin-top: 18px; padding: 17px 20px; background: #fbfbfd; border-top: 1px solid var(--line); }
+    .add-row { display: flex; gap: 9px; }
+    .add-input { min-width: 0; flex: 1; height: 40px; border: 1px solid var(--line); border-radius: 9px; padding: 0 12px; }
+    .add-hint { color: var(--muted); font-size: 11px; margin: 9px 0 0; }
+    .footer-note { color: #9297a7; text-align: center; margin: 17px 0 0; font-size: 11px; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 14px); background: #25283b; color: white; padding: 11px 17px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s ease; box-shadow: 0 8px 25px #20243a33; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    @media (max-width: 720px) {
+      .app { padding: 24px 18px 38px; }
+      header { margin-bottom: 25px; }
+      .heading { align-items: start; flex-direction: column; }
+      .heading h2 { font-size: 24px; }
+      .date-control { width: 100%; }
+      .date-control input { flex: 1; }
+      .calendar { padding: 15px; }
+      .calendar-grid { gap: 3px; }
+      .calendar-day, .calendar-blank { min-height: 54px; }
+      .calendar-day { padding: 7px 5px; gap: 5px; }
+      .calendar-day.today .day-number::after { display: none; }
+      .day-record { font-size: 10px; }
+      .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat { padding: 13px; min-height: 76px; gap: 10px; }
+      .stat-icon { width: 35px; height: 35px; }
+      .panel-top { align-items: flex-start; flex-direction: column; padding: 16px; }
+      .panel-actions { width: 100%; }
+      .search { flex: 1; }
+      .search input { width: 100%; }
+      .panel-actions .btn { white-space: nowrap; padding: 10px 11px; }
+      th, td { padding-left: 13px; padding-right: 13px; }
+      .add-area { padding: 15px; }
+    }
+    @media (max-width: 390px) {
+      .app { padding-left: 13px; padding-right: 13px; }
+      .brand p, .header-date { font-size: 11px; }
+      .stat { padding: 11px 9px; }
+      .stat-value { font-size: 19px; }
+      .add-row { flex-direction: column; }
+      .add-row .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="3"></rect><path d="M8 3v4M16 3v4M4 10h16M8 15l2.5 2.5L16 12"></path></svg>
+        </div>
+        <div><h1>오늘의 출석</h1><p>우리 반 하루를 간편하게 기록해요</p></div>
+      </div>
+      <div class="header-date" id="todayLabel"></div>
+    </header>
+
+    <section class="heading" aria-labelledby="pageTitle">
+      <div><h2 id="pageTitle">출석 현황</h2><p id="subtitle">날짜별 학생들의 출석 상태를 기록하고 관리해요.</p></div>
+      <div class="date-control">
+        <input id="attendanceDate" type="date" aria-label="출석 날짜">
+        <button id="todayButton" class="btn btn-light" type="button">오늘</button>
+      </div>
+    </section>
+
+    <section class="panel calendar" aria-labelledby="calendarTitle">
+      <div class="calendar-header">
+        <h3 id="calendarTitle" aria-live="polite"></h3>
+        <div class="calendar-nav">
+          <button id="previousMonth" class="btn btn-light" type="button" aria-label="이전 달">‹</button>
+          <button id="nextMonth" class="btn btn-light" type="button" aria-label="다음 달">›</button>
+        </div>
+      </div>
+      <div id="calendarGrid" class="calendar-grid" aria-label="월별 출석 달력"></div>
+      <p class="calendar-help">날짜를 선택하면 아래에서 해당 날짜의 출석을 확인하고 기록할 수 있어요.</p>
+    </section>
+
+    <section class="stats" aria-label="출석 요약">
+      <article class="stat"><div class="stat-icon all">#</div><div><div class="stat-label">전체 학생</div><div class="stat-value"><span id="totalCount">0</span><small>명</small></div></div></article>
+      <article class="stat"><div class="stat-icon present">✓</div><div><div class="stat-label">출석</div><div class="stat-value"><span id="presentCount">0</span><small>명</small></div></div></article>
+      <article class="stat"><div class="stat-icon late">↗</div><div><div class="stat-label">지각</div><div class="stat-value"><span id="lateCount">0</span><small>명</small></div></div></article>
+      <article class="stat"><div class="stat-icon other">···</div><div><div class="stat-label">미확인</div><div class="stat-value"><span id="unmarkedCount">0</span><small>명</small></div></div></article>
+    </section>
+
+    <section class="panel" aria-labelledby="rosterTitle">
+      <div class="panel-top">
+        <div class="panel-title"><h3 id="rosterTitle">학생 출석부</h3><span class="count-pill" id="rosterCount">0명</span></div>
+        <div class="panel-actions">
+          <label class="search"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="이름 검색" aria-label="학생 이름 검색"></label>
+          <button id="allPresentButton" class="btn btn-light" type="button">모두 출석</button>
+          <button id="exportButton" class="btn btn-light" type="button">CSV 저장</button>
+        </div>
+      </div>
+      <div id="rosterContent"></div>
+      <div class="add-area">
+        <form id="addForm" class="add-row">
+          <input id="studentNames" class="add-input" type="text" placeholder="학생 이름 입력 (여러 명은 쉼표로 구분)" autocomplete="off" aria-label="추가할 학생 이름">
+          <button class="btn btn-primary" type="submit">＋ 학생 추가</button>
+        </form>
+        <p class="add-hint">이름을 쉼표로 구분하면 여러 명을 한 번에 추가할 수 있어요.</p>
+      </div>
+    </section>
+    <p class="footer-note">출석 데이터는 이 브라우저에 자동 저장됩니다.</p>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "today-attendance-v1";
+      const statuses = [
+        { value: "unmarked", label: "미확인" },
+        { value: "present", label: "출석" },
+        { value: "late", label: "지각" },
+        { value: "early", label: "조퇴" },
+        { value: "absent", label: "결석" }
+      ];
+      const $ = (selector) => document.querySelector(selector);
+      const dateInput = $("#attendanceDate");
+      const rosterContent = $("#rosterContent");
+      let state = { students: [], records: {} };
+      let toastTimer;
+      let displayedYear;
+      let displayedMonth;
+
+      function todayISO() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      }
+      function loadState() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (!saved) return;
+          const parsed = JSON.parse(saved);
+          if (parsed && Array.isArray(parsed.students) && parsed.records && typeof parsed.records === "object") {
+            state = { students: parsed.students.filter((s) => s && typeof s.id === "string" && typeof s.name === "string"), records: parsed.records };
+          } else {
+            notify("저장된 출석 데이터 형식을 읽을 수 없어요.");
+          }
+        } catch (error) {
+          notify("저장된 데이터를 불러오지 못했어요.");
+        }
+      }
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+          notify("브라우저에 데이터를 저장하지 못했어요.");
+        }
+      }
+      function notify(message) {
+        const toast = $("#toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+      }
+      function getRecord(date) {
+        if (!state.records[date]) state.records[date] = {};
+        return state.records[date];
+      }
+      function initials(name) {
+        return Array.from(name.trim())[0] || "?";
+      }
+      function escapeHTML(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+      }
+      function syncDisplayedMonth() {
+        const [year, month] = dateInput.value.split("-").map(Number);
+        displayedYear = year;
+        displayedMonth = month - 1;
+      }
+      function renderCalendar() {
+        $("#calendarTitle").textContent = `${displayedYear}년 ${displayedMonth + 1}월`;
+        const firstWeekday = new Date(displayedYear, displayedMonth, 1).getDay();
+        const daysInMonth = new Date(displayedYear, displayedMonth + 1, 0).getDate();
+        const monthPrefix = `${String(displayedYear).padStart(4, "0")}-${String(displayedMonth + 1).padStart(2, "0")}`;
+        const today = todayISO();
+        const weekdays = ["일", "월", "화", "수", "목", "금", "토"].map((day) => `<div class="weekday">${day}</div>`).join("");
+        const blanks = '<div class="calendar-blank" aria-hidden="true"></div>'.repeat(firstWeekday);
+        const days = Array.from({ length: daysInMonth }, (_, index) => {
+          const day = index + 1;
+          const date = `${monthPrefix}-${String(day).padStart(2, "0")}`;
+          const record = state.records[date] || {};
+          const marked = state.students.filter(({ id }) => record[id] && ["present", "late", "early", "absent"].includes(record[id].status)).length;
+          const selected = date === dateInput.value;
+          const isToday = date === today;
+          const label = `${displayedYear}년 ${displayedMonth + 1}월 ${day}일${isToday ? ", 오늘" : ""}, 출석 기록 ${marked}명`;
+          return `<button type="button" class="calendar-day${selected ? " selected" : ""}${isToday ? " today" : ""}" data-date="${date}" aria-label="${label}" aria-pressed="${selected}"${isToday ? ' aria-current="date"' : ""}><span class="day-number">${day}</span>${marked ? `<span class="day-record">기록 ${marked}명</span>` : ""}</button>`;
+        }).join("");
+        $("#calendarGrid").innerHTML = weekdays + blanks + days;
+      }
+      function render() {
+        renderCalendar();
+        const date = dateInput.value;
+        const record = getRecord(date);
+        const query = $("#searchInput").value.trim().toLocaleLowerCase("ko");
+        const visibleStudents = state.students.filter((student) => student.name.toLocaleLowerCase("ko").includes(query));
+        const counts = { present: 0, late: 0, early: 0, absent: 0, unmarked: 0 };
+        state.students.forEach(({ id }) => {
+          const value = record[id] && record[id].status || "unmarked";
+          if (counts[value] !== undefined) counts[value] += 1;
+          else counts.unmarked += 1;
+        });
+        $("#totalCount").textContent = state.students.length;
+        $("#presentCount").textContent = counts.present;
+        $("#lateCount").textContent = counts.late;
+        $("#unmarkedCount").textContent = counts.unmarked;
+        $("#rosterCount").textContent = `${state.students.length}명`;
+        $("#subtitle").textContent = `${date.replaceAll("-", ". ")}. 학생들의 출석 상태를 기록하고 관리해요.`;
+
+        if (state.students.length === 0) {
+          rosterContent.innerHTML = '<div class="empty"><div class="empty-icon" aria-hidden="true">＋</div><h4>아직 등록된 학생이 없어요</h4><p>아래 입력창에 이름을 추가해 출석부를 만들어 보세요.</p></div>';
+          return;
+        }
+        if (visibleStudents.length === 0) {
+          rosterContent.innerHTML = '<div class="empty"><div class="empty-icon" aria-hidden="true">⌕</div><h4>검색 결과가 없어요</h4><p>다른 이름으로 다시 검색해 주세요.</p></div>';
+          return;
+        }
+        const rows = visibleStudents.map((student) => {
+          const item = record[student.id] || {};
+          const status = statuses.some((option) => option.value === item.status) ? item.status : "unmarked";
+          const options = statuses.map((option) => `<option value="${option.value}" ${option.value === status ? "selected" : ""}>${option.label}</option>`).join("");
+          return `<tr data-student-id="${escapeHTML(student.id)}">
+            <td class="number">${String(state.students.indexOf(student) + 1).padStart(2, "0")}</td>
+            <td><div class="student"><span class="avatar" aria-hidden="true">${escapeHTML(initials(student.name))}</span><span>${escapeHTML(student.name)}</span></div></td>
+            <td><select class="status-select status-${status}" aria-label="${escapeHTML(student.name)} 출석 상태">${options}</select></td>
+            <td><input class="memo" type="text" maxlength="80" placeholder="메모 추가" aria-label="${escapeHTML(student.name)} 메모" value="${escapeHTML(item.memo || "")}"></td>
+            <td><button class="remove-btn" type="button" aria-label="${escapeHTML(student.name)} 삭제" title="학생 삭제">×</button></td>
+          </tr>`;
+        }).join("");
+        rosterContent.innerHTML = `<div class="table-wrap"><table><thead><tr><th>번호</th><th>학생 이름</th><th>출석 상태</th><th>메모</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      }
+
+      dateInput.value = todayISO();
+      syncDisplayedMonth();
+      $("#todayLabel").textContent = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" }).format(new Date());
+      loadState();
+      render();
+
+      dateInput.addEventListener("change", () => {
+        if (!dateInput.value) { dateInput.value = todayISO(); }
+        syncDisplayedMonth();
+        render();
+      });
+      $("#todayButton").addEventListener("click", () => { dateInput.value = todayISO(); syncDisplayedMonth(); render(); });
+      function changeMonth(offset) {
+        const month = new Date(displayedYear, displayedMonth + offset, 1);
+        displayedYear = month.getFullYear();
+        displayedMonth = month.getMonth();
+        renderCalendar();
+      }
+      $("#previousMonth").addEventListener("click", () => changeMonth(-1));
+      $("#nextMonth").addEventListener("click", () => changeMonth(1));
+      $("#calendarGrid").addEventListener("click", (event) => {
+        const day = event.target.closest("button[data-date]");
+        if (!day) return;
+        dateInput.value = day.dataset.date;
+        render();
+        const selected = $("#calendarGrid").querySelector(`[data-date="${dateInput.value}"]`);
+        if (selected) selected.focus();
+      });
+      $("#searchInput").addEventListener("input", render);
+      $("#addForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const names = $("#studentNames").value.split(/[,\n]/).map((name) => name.trim()).filter(Boolean);
+        if (names.length === 0) { notify("추가할 학생 이름을 입력해 주세요."); return; }
+        const existing = new Set(state.students.map((student) => student.name.toLocaleLowerCase("ko")));
+        const added = [];
+        const duplicates = [];
+        names.forEach((name) => {
+          const key = name.toLocaleLowerCase("ko");
+          if (existing.has(key)) { duplicates.push(name); return; }
+          existing.add(key);
+          added.push({ id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`, name });
+        });
+        state.students.push(...added);
+        $("#studentNames").value = "";
+        saveState();
+        render();
+        if (added.length && duplicates.length) notify(`${added.length}명 추가, 중복된 ${duplicates.length}명은 제외했어요.`);
+        else if (added.length) notify(`${added.length}명의 학생을 추가했어요.`);
+        else notify("이미 등록된 이름이에요.");
+      });
+      $("#allPresentButton").addEventListener("click", () => {
+        if (!state.students.length) { notify("먼저 학생을 추가해 주세요."); return; }
+        const record = getRecord(dateInput.value);
+        state.students.forEach(({ id }) => { record[id] = { ...(record[id] || {}), status: "present" }; });
+        saveState();
+        render();
+        notify("전체 학생을 출석으로 기록했어요.");
+      });
+      $("#exportButton").addEventListener("click", () => {
+        if (!state.students.length) { notify("저장할 학생 기록이 없어요."); return; }
+        const record = getRecord(dateInput.value);
+        const rows = [["날짜", "번호", "이름", "출석 상태", "메모"], ...state.students.map((student, index) => {
+          const item = record[student.id] || {};
+          const status = statuses.find((option) => option.value === item.status);
+          return [dateInput.value, index + 1, student.name, status ? status.label : "미확인", item.memo || ""];
+        })];
+        const csv = "\uFEFF" + rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `출석_${dateInput.value}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        notify("출석부를 CSV 파일로 저장했어요.");
+      });
+      rosterContent.addEventListener("change", (event) => {
+        const row = event.target.closest("tr[data-student-id]");
+        if (!row) return;
+        const item = getRecord(dateInput.value)[row.dataset.studentId] || {};
+        if (event.target.matches(".status-select")) {
+          item.status = event.target.value;
+          event.target.className = `status-select status-${item.status}`;
+          getRecord(dateInput.value)[row.dataset.studentId] = item;
+          saveState();
+          render();
+        }
+      });
+      rosterContent.addEventListener("input", (event) => {
+        if (!event.target.matches(".memo")) return;
+        const row = event.target.closest("tr[data-student-id]");
+        const record = getRecord(dateInput.value);
+        const item = record[row.dataset.studentId] || {};
+        item.memo = event.target.value;
+        record[row.dataset.studentId] = item;
+        saveState();
+      });
+      rosterContent.addEventListener("click", (event) => {
+        const button = event.target.closest(".remove-btn");
+        if (!button) return;
+        const row = button.closest("tr[data-student-id]");
+        const student = state.students.find((item) => item.id === row.dataset.studentId);
+        if (!student || !window.confirm(`${student.name} 학생을 출석부에서 삭제할까요? 날짜별 기록도 함께 삭제됩니다.`)) return;
+        state.students = state.students.filter((item) => item.id !== student.id);
+        Object.values(state.records).forEach((record) => { delete record[student.id]; });
+        saveState();
+        render();
+        notify(`${student.name} 학생을 삭제했어요.`);
+      });
+    })();
+  </script>
+</body>
+</html>
